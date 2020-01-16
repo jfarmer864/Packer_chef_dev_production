@@ -29,12 +29,12 @@
   "provisioners": [
   {
   "type": "shell",
-  "inline": ["mkdir ./app"]
+  "inline": ["mkdir /home/ubuntu/app"]
   },
   {
   "type": "file",
   "source": "./Python_app/",
-  "destination": "./app"
+  "destination": "/home/ubuntu/app"
   },
   {
   "type": "chef-solo",
