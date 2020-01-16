@@ -1,0 +1,7 @@
+DEPENDENCIES
+  python_cookbook
+    git: git@github.com:jfarmer864/Python_cookbook.git
+    revision: b53d2921819383ea1fc5aa7c3080d7126ef6c6e6
+
+GRAPH
+  python_cookbook (0.1.0)
