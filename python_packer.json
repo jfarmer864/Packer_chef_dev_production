@@ -33,7 +33,7 @@
   },
   {
   "type": "file",
-  "source": "./Python_app/",
+  "source": "./It_Jobs_Watch_Data_Package-master/",
   "destination": "/home/ubuntu/app"
   },
   {
