@@ -31,7 +31,7 @@ provision script for Vagrant before I translated it into a chef cookbook).
 
 Chef Cookbook:
 I then began working on creating the cookbook for the VM. this cookbook and all
-the files can be found in Cookbooks/python_cookbook. To correctly provision our
+the files can be found in https://github.com/jfarmer864/Python_cookbook. To correctly provision our
 machine, I needed to create a recipe (chef's version of a provision script) that
 replicated the steps I did before to get a working app. The recipe is written in
 ruby which is a more accessible language so this task wasn't too difficult. chef
@@ -53,13 +53,36 @@ process. The project is uploaded onto github at this repository:
 https://github.com/jfarmer864/Packer_chef_dev_production
 This repo has a webhook which is configured to activate when a developer pushes
 to this repository. On Sparta's Jenkins server there is a job called
-'jack-farmer-eng47-python-app-test' which is supposed the same unit and integration tests
-as before, the job will then merge the developer and master branches for the repository on
-Github.
+'jack-farmer-eng47-python-app-test' which will perform application tests in the
+app under tests/ and if successful the job will then merge the developer and
+master branches for the repository on Github. If this Jenkins job is completed
+successfully, then a second Jenkins Job will initiate which will call packer to
+build an AMI with the updated project.
+
+Jenkins also has a job specifically with the Python_cookbook, this is similar to
+the job above where it will perform the Unit and integration tests for the cookbook
+as described above and if successful, will merge together the developer and master
+branches.
 
 Unfortunately, there was a problem with running the tests in Jenkins as the server
-had problems with installing and running chef. Therefore the cloud tests could not be
-run. I merged the repo branches manually and I moved onto packer.
+had problems with using the python and chef slave nodes, these are needed to perform
+the python based tests for the application and the chef tests for the cookbook.
+as a result the repository branches are merged manually for the time being.
+
+Jenkins Cookbook pipeline:
+1. upload to Github Cookbook developer branch
+2. trigger Jenkins cookbook test Job with webhook
+3. perform unit and integration tests with chef slave node
+4. if successful, initiate merging with master branch
+
+Jenkins Python application test:
+1. upload to Github application developer branch
+2. trigger Jenkins app test job with webhook
+3. run pytest program on python slave node to test application
+4. if successful, initiate merge with master branch and trigger packer Job
+5. Packer job starts by calling berks command to grab latest cookbook build from Github
+6. Packer job then calls build command in packer to create AMI of project which will
+then appear on AWS
 
 Packer:
 Packer is a program that helps configure the creation of machine images. I was tasked
@@ -72,30 +95,30 @@ project folder! The Packer program uses the amazon-ebs to create the Amazon vers
 of the machine image which is specified in the JSON file. the file also details
 a provisioner which in this case is chef-solo.
 
-I was able to create an AMI of a base Ubuntu 16.04 machine, however due to the program
-not being able to find the right file locations, I was not able to run the provision
-script in Packer.
+An AMI was created to be used as a python slave node, this AMI was configured to
+have Python3, Pip and the app requirements already installed but not the app itself
+included in the VM. This AMI is called python_app_jack_farmer-jfarmer864-slave-1.1
+- ami-058430672cd23bf65 and is visible on AWS
 
 Berksfile:
 Just a note on the Berksfile, I had to do the chef tests locally in a different location
 and when I was satisfied with the cookbook, I used the command 'berks vendor Cookbooks'
-which moved the cookbook from that location to this project folder.
+which moved the cookbook from that location to this project folder. This is also
+useful in Jenkins as it allows developer and environment pipeline to remain seperate,
+only having the two pipelines come together when the AMI is built, this ensures that
+development is more flexible and isn't tied down by another team's issues.
 
 Things that worked:
 - local python_app VM with shell script provision
 - python app chef cookbook and unit/integration tests
 - local python_app VM with chef provision
 - Packer AMI for a base Ubuntu machine
+- Packer creating AMI with full provisioning
 
 Things that had issues:
 - Jenkins running unit/integration tests and github merging
-- Packer creating an AMI with full provision
 
 things that can be improved:
-- The problem with Packer was based on the program not finding the right location
-to send the app files, I could have remedied this by spinning up the base ubuntu
-instance and looking at the direct file structure, unfortunately it would have ended
-up being expensive to start spinning up instances!
-- Jenkins needed to have chef installed on the server, unfortunately there were
-many issues and even after the trainer tried to fix this issue, it was not possible
-to conduct tests on the Jenkins server.
+- Jenkins issues came form the fact that the slave node for Python and Chef
+were not up and running due to technical issues out of my control. So although
+the jobs exist on the server, it was not possible to check if they worked correctly.
